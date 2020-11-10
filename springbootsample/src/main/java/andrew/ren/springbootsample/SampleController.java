@@ -35,7 +35,7 @@ public class SampleController {
 		    JedisPool pool = new JedisPool(poolConfig, redis_host, redis_port);
 		    Jedis jedis = pool.getResource();
 		    jedis.set("test", "value");
-		    if ("value" == jedis.get("test"))
+		    if (jedis.get("test").equals("value"))
 		        output += "Redis Test: passed";
 		    else
 		        output += "Redis Test: failed";
