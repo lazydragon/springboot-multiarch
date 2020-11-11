@@ -1,2 +1,0 @@
-springbootsample.redis.host = {redis hostname}
-springbootsample.redis.port = {redis port number}

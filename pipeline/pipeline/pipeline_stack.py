@@ -33,12 +33,21 @@ class PipelineStack(core.Stack):
                             privileged=True),
                         environment_variables=self.get_build_env_vars(ecr_repo))
         self.add_role_access_to_build(amd_build)
+        
+        post_build = codebuild.PipelineProject(self, "PostBuild",
+                        build_spec=codebuild.BuildSpec.from_source_filename("pipeline/post_build.yml"),
+                        environment=codebuild.BuildEnvironment(
+                            build_image=codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
+                            privileged=True),
+                        environment_variables=self.get_build_env_vars(ecr_repo))
+        self.add_role_access_to_build(post_build)
 
 
         # create pipeline
         source_output = codepipeline.Artifact()
         arm_build_output = codepipeline.Artifact("ARMBuildOutput")
         amd_build_output = codepipeline.Artifact("AMDBuildOutput")
+        post_build_output = codepipeline.Artifact("PostBuildOutput")
 
         codepipeline.Pipeline(self, "Pipeline",
             stages=[
@@ -60,6 +69,14 @@ class PipelineStack(core.Stack):
                             project=amd_build,
                             input=source_output,
                             outputs=[amd_build_output]),
+                            ]),
+                codepipeline.StageProps(stage_name="PostBuild",
+                    actions=[
+                        codepipeline_actions.CodeBuildAction(
+                            action_name="Post_Build",
+                            project=post_build,
+                            input=source_output,
+                            outputs=[post_build_output])
                             ]),
                 #codepipeline.StageProps(stage_name="Deploy", actions=[]),
             ])
