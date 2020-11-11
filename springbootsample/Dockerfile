@@ -1,10 +1,13 @@
-FROM openjdk:11.0.7
+FROM amazoncorretto:11 as builder
 
-VOLUME /tmp
-COPY target/springbootsample-1.0.jar springbootsample-1.0.jar
+COPY . /srv
+WORKDIR /srv
+RUN ./mvnw package spring-boot:repackage
 
-RUN jar xf springbootsample-1.0.jar
 
+FROM amazoncorretto:11
+
+COPY --from=builder /srv/target/springbootsample-1.0.jar /srv/
 EXPOSE 8080
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher", "-Dspring.config.location=application.properties"]
+ENTRYPOINT ["java","-jar", "/srv/springbootsample-1.0.jar"]
