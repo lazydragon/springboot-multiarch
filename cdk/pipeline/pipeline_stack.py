@@ -19,7 +19,7 @@ class PipelineStack(core.Stack):
 
         # create code builds
         arm_build = codebuild.PipelineProject(self, "ARMBuild",
-                        build_spec=codebuild.BuildSpec.from_source_filename("pipeline/armbuild.yml"),
+                        build_spec=codebuild.BuildSpec.from_source_filename("cdk/pipeline/armbuild.yml"),
                         environment=codebuild.BuildEnvironment(
                             build_image=codebuild.LinuxBuildImage.AMAZON_LINUX_2_ARM,
                             privileged=True),
@@ -27,7 +27,7 @@ class PipelineStack(core.Stack):
         self.add_role_access_to_build(arm_build)
             
         amd_build = codebuild.PipelineProject(self, "AMDBuild",
-                        build_spec=codebuild.BuildSpec.from_source_filename("pipeline/amdbuild.yml"),
+                        build_spec=codebuild.BuildSpec.from_source_filename("cdk/pipeline/amdbuild.yml"),
                         environment=codebuild.BuildEnvironment(
                             build_image=codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
                             privileged=True),
@@ -35,7 +35,7 @@ class PipelineStack(core.Stack):
         self.add_role_access_to_build(amd_build)
         
         post_build = codebuild.PipelineProject(self, "PostBuild",
-                        build_spec=codebuild.BuildSpec.from_source_filename("pipeline/post_build.yml"),
+                        build_spec=codebuild.BuildSpec.from_source_filename("cdk/pipeline/post_build.yml"),
                         environment=codebuild.BuildEnvironment(
                             build_image=codebuild.LinuxBuildImage.AMAZON_LINUX_2_3,
                             privileged=True),
