@@ -6,6 +6,8 @@ prerequesite
 
 2. 
 ```
+python3 -m venv .env
+
 cd cdk
 ./bootstrap.sh {account id}
 ```
