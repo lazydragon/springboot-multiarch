@@ -15,3 +15,5 @@ cd cdk
 commit code to codecommit
 
 kubectl describe ingress | grep Address 
+
+./cleanup.sh
