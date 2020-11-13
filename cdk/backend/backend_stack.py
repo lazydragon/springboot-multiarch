@@ -16,10 +16,10 @@ class BackendStack(core.Stack):
         vpc = ec2.Vpc(self, "VPC")
         
         # create eks
-        eks = self.create_eks(vpc)
+        self.eks = self.create_eks(vpc)
         
         # create elasticache redis
-        redis = self.create_redis(vpc, eks)
+        self.redis = self.create_redis(vpc, self.eks)
         
         
     def create_eks(self, vpc):
@@ -35,6 +35,8 @@ class BackendStack(core.Stack):
         # create service account
         sa = cluster.add_service_account("LBControllerServiceAccount", name="aws-load-balancer-controller", 
                                         namespace="kube-system")
+        sa_annotated = self.add_helm_annotation(cluster, sa)
+        
         # create policy for the service account
         statements = []
         with open('backend/iam_policy.json') as f:
@@ -45,7 +47,7 @@ class BackendStack(core.Stack):
         policy.attach_to_role(sa.role)
         
         # add helm charts
-        cluster.add_helm_chart("LBIngress", chart="aws-load-balancer-controller",
+        ingress = cluster.add_helm_chart("LBIngress", chart="aws-load-balancer-controller",
                                 release="aws-load-balancer-controller",
                                 repository="https://aws.github.io/eks-charts",
                                 namespace="kube-system", values={
@@ -53,6 +55,8 @@ class BackendStack(core.Stack):
                                     "serviceAccount.name": "aws-load-balancer-controller",
                                     "serviceAccount.create": "false"
                                 })
+        ingress.node.add_dependency(sa_annotated)
+        
         return cluster
         
         
@@ -78,3 +82,30 @@ class BackendStack(core.Stack):
         redis.add_depends_on(subnet_group);
         
         return redis
+        
+    
+    def add_helm_annotation(self, cluster, service_account):
+        """
+        workaround to add helm role to service account
+        
+        """
+        
+        return eks.KubernetesManifest(self, "ServiceAccountManifest", cluster=cluster,
+          manifest=[{
+            "apiVersion": "v1",
+            "kind": "ServiceAccount",
+            "metadata": {
+              "name": service_account.service_account_name,
+              "namespace": service_account.service_account_namespace, 
+              "labels": {
+                "app.kubernetes.io/name": service_account.service_account_name,
+                "app.kubernetes.io/managed-by": "Helm",
+              },
+              "annotations": {
+                "eks.amazonaws.com/role-arn": service_account.role.role_arn,
+                "meta.helm.sh/release-name": service_account.service_account_name,
+                "meta.helm.sh/release-namespace": service_account.service_account_namespace,
+              },
+            },
+          }],
+        );

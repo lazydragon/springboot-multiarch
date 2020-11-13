@@ -32,9 +32,3 @@ build/
 ### VS Code ###
 .vscode/
 
-### bootstrap
-bootstrap.sh
-bootstrap_local.sh
-kubernetes.yaml
-application.properties
-eksctl.yaml

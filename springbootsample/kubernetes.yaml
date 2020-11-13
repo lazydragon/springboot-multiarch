@@ -37,7 +37,7 @@ metadata:
     app: springbootsample
   namespace: default
 spec:
-  replicas: 2
+  replicas: 2 
   selector:
     matchLabels:
       app: springbootsample
@@ -52,9 +52,18 @@ spec:
         app: springbootsample
     spec:
       containers:
-      - image: {account id}.dkr.ecr.{aws region}.amazonaws.com/springboot-sample:latest
+      - image: {ecr_image}
         imagePullPolicy: Always
         name: springbootsample
         ports:
         - containerPort: 8080
           protocol: TCP
+        env:
+        - name: springbootsample.redis.host
+          value: {redis_host}
+        - name: springbootsample.redis.port
+          value: "{redis_port}"
+        - name: node
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName

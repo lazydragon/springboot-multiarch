@@ -24,3 +24,17 @@ phases:
       - docker manifest annotate --arch amd64 $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:$AMD_TAG
       - docker manifest inspect $REPOSITORY_URI:$IMAGE_TAG
       - docker manifest push $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - aws eks update-kubeconfig --name $EKS_NAME --region $AWS_DEFAULT_REGION --role-arn $EKS_ROLE
+      - cd springbootsample
+      - sed -i "s|{ecr_image}|${REPOSITORY_URI}:${IMAGE_TAG}|g" kubernetes.yaml
+      - sed -i "s|{redis_host}|${REDIS_HOST}|g" kubernetes.yaml
+      - sed -i "s|{redis_port}|${REDIS_PORT}|g" kubernetes.yaml
+      - kubectl apply -f kubernetes.yaml
+      - kubectl describe ingress | grep Address > output
+  reports:
+    outputs:
+      files:
+        - "output"
+    
