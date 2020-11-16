@@ -6,6 +6,7 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.json.simple.JSONObject;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,15 +47,13 @@ public class SampleController {
 	@RequestMapping("/")
 	@ResponseBody
 	public String home() {
-		String output = "";
+		JSONObject output = new JSONObject();
 		
-	    output += "Node NAME: " + node + "\n"; 
+		output.put("Node Name", node);
+		output.put("Redis Test", jedisTest());
+		output.put("RDS Test", rdsTest());
 		
-		output += jedisTest();
-		
-		output += rdsTest();
-		
-        return output;
+        return output.toString();
 	}
 	
 	private String jedisTest() {
@@ -64,16 +63,17 @@ public class SampleController {
 		    Jedis jedis = pool.getResource();
 		    jedis.set("test", "value");
 		    if (jedis.get("test").equals("value"))
-		        return "Redis Test: passed\n";
+		        return "passed";
 		    else
-		        return "Redis Test: failed\n";
+		        return "failed";
 	    }catch(Exception e){
-	        return "Redis Test: failed\n";
+	        return "failed";
 	    }
 		
 	}
 	
 	private String rdsTest() {
+		try {
 			DriverManagerDataSource dataSource = new DriverManagerDataSource();
 			dataSource.setDriverClassName(rds_driver);
 			dataSource.setUrl(rds_url);
@@ -89,9 +89,11 @@ public class SampleController {
 		    jdbcTemplate.update("REPLACE INTO test.user(id, name) VALUES(1, 'test')");
 		    Integer count = jdbcTemplate.queryForObject("SELECT count(*) FROM test.user", Integer.class);
 		    if (count == 1)
-	        	return "RDS Test: passed\n";
+	        	return "passed";
 	        else
-	        	return "RDS Test: failed\n";
+	        	return "failed";
+		}catch(Exception e){
+	        return "failed";
+	    }
 	}
-	
 }
