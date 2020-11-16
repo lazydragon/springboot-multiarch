@@ -1,7 +1,8 @@
 from aws_cdk import (core,  aws_lambda as lambda_, 
                      aws_s3 as s3, aws_eks as eks,
                      aws_iam as iam, aws_ec2 as ec2,
-                     aws_elasticache as elasticache)
+                     aws_elasticache as elasticache,
+                     aws_rds as rds)
                      
 import json
 
@@ -21,6 +22,9 @@ class BackendStack(core.Stack):
         # create elasticache redis
         self.redis = self.create_redis(vpc, self.eks)
         
+        # create rds
+        self.rds_cluster = self.create_rds(vpc, self.eks)
+        
         
     def create_eks(self, vpc):
         # create eks cluster with amd nodegroup
@@ -31,6 +35,10 @@ class BackendStack(core.Stack):
         cluster.add_nodegroup_capacity("graviton", desired_size=1, 
                                 instance_type=ec2.InstanceType("m6g.large"), 
                                 nodegroup_name="graviton", node_role=cluster.default_nodegroup.role)
+                                
+        # add secret access to eks node role
+        cluster.default_nodegroup.role.add_managed_policy(
+            iam.ManagedPolicy.from_aws_managed_policy_name("SecretsManagerReadWrite"))
         
         # create service account
         sa = cluster.add_service_account("LBControllerServiceAccount", name="aws-load-balancer-controller", 
@@ -82,6 +90,22 @@ class BackendStack(core.Stack):
         redis.add_depends_on(subnet_group);
         
         return redis
+        
+        
+    def create_rds(self, vpc, eks):
+        rds_cluster = rds.DatabaseCluster(self, "Database",
+            engine=rds.DatabaseClusterEngine.aurora_mysql(version=rds.AuroraMysqlEngineVersion.VER_2_08_1),
+            instance_props={
+                "instance_type": ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.SMALL),
+                "vpc_subnets": {
+                    "subnet_type": ec2.SubnetType.PRIVATE
+                },
+                "vpc": vpc
+            }
+        ) 
+        eks.connections.allow_to(rds_cluster, ec2.Port.tcp(3306))
+        
+        return rds_cluster
         
     
     def add_helm_annotation(self, cluster, service_account):

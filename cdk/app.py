@@ -10,6 +10,7 @@ env = core.Environment(region="us-east-1")
 app = core.App()
 
 backend = BackendStack(app, "backend", env=env)
-pipeline = PipelineStack(app, "pipeline", eks=backend.eks, redis=backend.redis, env=env)
+pipeline = PipelineStack(app, "pipeline", eks=backend.eks, redis=backend.redis,
+                        rds_cluster=backend.rds_cluster, env=env)
 
 app.synth()

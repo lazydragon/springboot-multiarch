@@ -1,5 +1,6 @@
 package andrew.ren.springbootsample;
 
+import java.lang.StringBuilder;
 import java.time.Duration;
 import javax.annotation.PostConstruct; 
 
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -27,6 +30,16 @@ public class SampleController {
     @Value("${node}")
     private String node;
     
+    @Value("${spring.datasource.url}")
+    private String rds_url;
+    
+    @Value("${spring.datasource.username}")
+    private String rds_username;
+    
+    @Value("${spring.datasource.driver-class-name}")
+    private String rds_driver;
+    
+    
     Logger logger = LoggerFactory.getLogger(SampleController.class);
     
 	
@@ -38,6 +51,8 @@ public class SampleController {
 	    output += "Node NAME: " + node + "\n"; 
 		
 		output += jedisTest();
+		
+		output += rdsTest();
 		
         return output;
 	}
@@ -56,6 +71,27 @@ public class SampleController {
 	        return "Redis Test: failed\n";
 	    }
 		
+	}
+	
+	private String rdsTest() {
+			DriverManagerDataSource dataSource = new DriverManagerDataSource();
+			dataSource.setDriverClassName(rds_driver);
+			dataSource.setUrl(rds_url);
+			dataSource.setUsername(rds_username);
+			JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+			
+		    jdbcTemplate.execute("CREATE DATABASE IF NOT EXISTS test");
+		    StringBuilder sb = new StringBuilder();
+		    sb.append("CREATE TABLE IF NOT EXISTS test.user (id int (10) unsigned NOT NULL AUTO_INCREMENT,\n")
+		        .append("name varchar (64) NOT NULL DEFAULT '',\n")
+		        .append("PRIMARY KEY (ID));\n");
+		    jdbcTemplate.execute(sb.toString());
+		    jdbcTemplate.update("REPLACE INTO test.user(id, name) VALUES(1, 'test')");
+		    Integer count = jdbcTemplate.queryForObject("SELECT count(*) FROM test.user", Integer.class);
+		    if (count == 1)
+	        	return "RDS Test: passed\n";
+	        else
+	        	return "RDS Test: failed\n";
 	}
 	
 }

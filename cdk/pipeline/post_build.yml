@@ -31,5 +31,8 @@ phases:
       - sed -i "s|{ecr_image}|${REPOSITORY_URI}:${IMAGE_TAG}|g" kubernetes.yaml
       - sed -i "s|{redis_host}|${REDIS_HOST}|g" kubernetes.yaml
       - sed -i "s|{redis_port}|${REDIS_PORT}|g" kubernetes.yaml
+      - sed -i "s|{rds_url}|jdbc-secretsmanager:mysql://${RDS_HOST}:${RDS_PORT}|g" kubernetes.yaml
+      - sed -i "s|{secret_name}|${RDS_SECRET::-7}|g" kubernetes.yaml
+      - cat kubernetes.yaml
       - kubectl apply -f kubernetes.yaml
     

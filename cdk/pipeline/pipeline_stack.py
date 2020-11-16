@@ -7,12 +7,14 @@ from aws_cdk import (core, aws_codebuild as codebuild,
 
 class PipelineStack(core.Stack):
 
-    def __init__(self, scope: core.Construct, id: str, eks, redis, **kwargs) -> None:
+    def __init__(self, scope: core.Construct, id: str, eks, redis, rds_cluster, **kwargs) -> None:
         
         super().__init__(scope, id, **kwargs)
         
         self.eks = eks
         self.redis = redis
+        self.rds_cluster = rds_cluster
+        
 
         # create ECR
         ecr_repo = ecr.Repository(self, "ECRRep", repository_name="springboot-multiarch")
@@ -108,6 +110,9 @@ class PipelineStack(core.Stack):
                                 type=codebuild.BuildEnvironmentVariableType.PARAMETER_STORE),
                     "REDIS_HOST": codebuild.BuildEnvironmentVariable(value=self.redis.attr_redis_endpoint_address),
                     "REDIS_PORT": codebuild.BuildEnvironmentVariable(value=self.redis.attr_redis_endpoint_port),
+                    "RDS_SECRET": codebuild.BuildEnvironmentVariable(value=self.rds_cluster.secret.secret_name),
+                    "RDS_HOST": codebuild.BuildEnvironmentVariable(value=self.rds_cluster.cluster_endpoint.hostname),
+                    "RDS_PORT": codebuild.BuildEnvironmentVariable(value=self.rds_cluster.cluster_endpoint.port),
                     "EKS_NAME": codebuild.BuildEnvironmentVariable(value=self.eks.cluster_name),
                     "EKS_ROLE": codebuild.BuildEnvironmentVariable(value=self.eks.kubectl_role.role_arn),
                 }

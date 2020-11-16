@@ -36,6 +36,7 @@ aws-cdk.aws-lambda==1.72.0
 aws-cdk.aws-logs==1.72.0
 aws-cdk.aws-route53==1.72.0
 aws-cdk.aws-route53-targets==1.72.0
+aws-cdk.aws-rds==1.72.0
 aws-cdk.aws-s3==1.72.0
 aws-cdk.aws-s3-assets==1.72.0
 aws-cdk.aws-sam==1.72.0

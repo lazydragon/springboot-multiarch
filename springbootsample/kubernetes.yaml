@@ -63,6 +63,12 @@ spec:
           value: {redis_host}
         - name: springbootsample.redis.port
           value: "{redis_port}"
+        - name: spring.datasource.url 
+          value: {rds_url}
+        - name: spring.datasource.username
+          value: {secret_name}
+        - name: spring.datasource.driver-class-name
+          value: com.amazonaws.secretsmanager.sql.AWSSecretsManagerMySQLDriver
         - name: node
           valueFrom:
             fieldRef:
